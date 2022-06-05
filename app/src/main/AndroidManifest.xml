@@ -9,8 +9,12 @@
         android:roundIcon="@mipmap/ic_launcher_foreground"
         android:supportsRtl="true"
         android:theme="@style/Theme.Youtube_Block_Application2">
-        <activity android:name=".MainActivity"
-            android:exported="false">
+        <activity
+            android:name=".DailyActivity"
+            android:exported="false" />
+        <activity
+            android:name=".MainActivity"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
