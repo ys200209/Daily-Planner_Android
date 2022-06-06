@@ -3,24 +3,33 @@ package com.seyeong.youtube_block_application2;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.app.TimePickerDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.BaseAdapter;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.TimePicker;
 import android.widget.Toast;
 
+import com.seyeong.youtube_block_application2.db.DbOpenHelper;
+
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.List;
 
 public class DailyActivity extends AppCompatActivity {
     private ListView customListView;
-    // static private CustomAdapter adapter;
+    static private CustomAdapter adapter;
     private ArrayList<CustomView> customList;
     private TextView backSpace;
-    private TextView from, to;
+    private TextView from, to, add;
+    private DbOpenHelper mDbOpenHelper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -32,13 +41,22 @@ public class DailyActivity extends AppCompatActivity {
         backSpace = findViewById(R.id.backSpace);
         from = findViewById(R.id.from);
         to = findViewById(R.id.to);
+        add = findViewById(R.id.add);
 
         Intent i = getIntent();
-        int Month = i.getIntExtra("month", 1);
-        int Day = i.getIntExtra("day", 1);
+        MonthDate monthDate = new MonthDate(
+                i.getIntExtra("year", 1),
+                i.getIntExtra("month", 1),
+                i.getIntExtra("day", 1));
+
 
         TextView date = findViewById(R.id.date);
-        date.setText(Month + "월 " + Day + "일");
+        date.setText(monthDate.getMonth() + "월 " + monthDate.getDay() + "일");
+
+        openPlan();
+
+        adapter = new CustomAdapter(DailyActivity.this, customList);
+        customListView.setAdapter(adapter);
 
         backSpace.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -55,6 +73,10 @@ public class DailyActivity extends AppCompatActivity {
             showHourPicker("To :");
         });
 
+        add.setOnClickListener((v) -> {
+            customList.add(new CustomView(from.getText().toString(), to.getText().toString()));
+        });
+
     }
 
     public void showHourPicker(String title) {
@@ -69,6 +91,24 @@ public class DailyActivity extends AppCompatActivity {
                 if (view.isShown()) {
                     myCalender.set(Calendar.HOUR_OF_DAY, hourOfDay);
                     myCalender.set(Calendar.MINUTE, minute);
+
+                    Toast.makeText(getApplicationContext(), hourOfDay + ", " + minute , Toast.LENGTH_SHORT).show();
+
+                    if (title.equals("From :")) {
+                        from.setText(hourOfDay + ":" + minute);
+                        /*if (hourOfDay < 10) {
+                            from.setText("0"+hourOfDay+":"+mi);
+                        } else {
+
+                        }*/
+                    } else {
+                        to.setText(hourOfDay + ":" + minute);
+                        /*if (hourOfDay < 10) {
+
+                        } else {
+
+                        }*/
+                    }
                 }
             }
         };
@@ -78,16 +118,9 @@ public class DailyActivity extends AppCompatActivity {
         timePickerDialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
         timePickerDialog.show();
 
-        new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialogInterface, int i) {
-                Toast.makeText(getApplicationContext(), hour+", " + minute, Toast.LENGTH_SHORT).show();
-            }
-        };
-
     }
 
-    /*public class CustomAdapter extends BaseAdapter {
+    public class CustomAdapter extends BaseAdapter {
 
         private Context context;
         private List<CustomView> customViewList;
@@ -101,16 +134,9 @@ public class DailyActivity extends AppCompatActivity {
         }
 
         public class ViewHolder {
-            public ImageView thumbnail;
-            public TextView title;
-            public int int_progress = public_progress;
-            public ProgressBar progressBar;
-            public String string_persent = public_percent;
-            public TextView progressPersent;
-            public TextView fileSize;
-            public Bitmap mBitmap;
-            public TextView tvDownloadStatus;
-            public String holder_downloadStatus = downloadStatus;
+            public TextView from;
+            public TextView to;
+            public ImageView delete;
         }
 
         @Override
@@ -138,15 +164,11 @@ public class DailyActivity extends AppCompatActivity {
                 view = vi.inflate(R.layout.custom_view, null);
                 //final TextView work = (TextView) view.findViewById(R.id.titl);
                 holder = new ViewHolder();
-                holder.thumbnail = (ImageView) view.findViewById(R.id.thumbnail);
-                holder.title = (TextView) view.findViewById(R.id.title);
-                holder.progressBar = (ProgressBar) view.findViewById(R.id.progress_bar);
-                holder.progressPersent = (TextView) view.findViewById(R.id.progress_percent);
-                holder.fileSize = (TextView) view.findViewById(R.id.fileSize);
-                holder.tvDownloadStatus = (TextView) view.findViewById(R.id.downloadStatus);
+                holder.from = (TextView) view.findViewById(R.id.customFrom);
+                holder.to = (TextView) view.findViewById(R.id.customTo);
+                holder.delete = (ImageView) view.findViewById(R.id.delete);
 
                 view.setTag(holder);
-
 
             } else {
                 holder = (ViewHolder) view.getTag();
@@ -167,6 +189,14 @@ public class DailyActivity extends AppCompatActivity {
             holder.title.setTag(country);
             return view;
         }
-    }*/
+    }
+
+    public void openPlan() {
+        mDbOpenHelper.openR();
+
+
+
+        mDbOpenHelper.close();
+    }
 
 }

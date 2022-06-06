@@ -59,6 +59,7 @@ public class MainActivity extends AppCompatActivity {
                 new SaturdayDecorator(),
                 oneDayDecorator);
 
+        // 일정이 존재하는 날짜에 DB에서 조회.
         List<String> result = Arrays.asList("2017,03,18","2017,04,18","2017,05,18","2017,06,18");
 
         new ApiSimulator(result).executeOnExecutor(Executors.newSingleThreadExecutor());
@@ -82,6 +83,7 @@ public class MainActivity extends AppCompatActivity {
                 Toast.makeText(getApplicationContext(), shot_Day , Toast.LENGTH_SHORT).show();
 
                 Intent i = new Intent(MainActivity.this, DailyActivity.class);
+                i.putExtra("year", Year);
                 i.putExtra("month", Month);
                 i.putExtra("day", Day);
                 startActivity(i);

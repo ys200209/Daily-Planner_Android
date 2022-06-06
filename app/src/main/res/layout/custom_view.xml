@@ -6,25 +6,75 @@
     android:layout_height="match_parent"
     android:orientation="horizontal">
 
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingTop="10dp"
+        android:orientation="horizontal"
+        android:layout_margin="5dp">
 
-    <TextView
-        android:layout_width="0dp"
-        android:layout_height="match_parent"
-        android:text="1. Example"
-        android:textSize="20sp"
-        android:textStyle="bold"
-        android:layout_weight="1"
-        android:padding="8sp"
-        android:gravity="center_vertical"
-        android:layout_margin="10dp"
-        />
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            >
 
-    <ImageView
-        android:id="@+id/imageView"
-        android:layout_width="58dp"
-        android:layout_height="match_parent"
-        android:src="@drawable/outline_delete_24"
-        android:layout_margin="10dp"/>
+            <TextView
+                android:id="@+id/customFrom"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:text="00:00"
+                android:textColor="#33B5E5"
+                android:padding="30dp"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:layout_marginLeft="15dp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toStartOf="@+id/textView2"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <TextView
+                android:id="@+id/textView2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:padding="25dp"
+                android:text="~"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <TextView
+                android:id="@+id/customTo"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:padding="30dp"
+                android:text="23:59"
+                android:textColor="#33B5E5"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toEndOf="@+id/textView2"
+                app:layout_constraintTop_toTopOf="parent" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <ImageView
+            android:id="@+id/delete"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_margin="15dp"
+            android:src="@drawable/outline_delete_24"
+            app:layout_constraintEnd_toEndOf="parent" />
+
+    </LinearLayout>
+
+
+
+
 
 
 </LinearLayout>
