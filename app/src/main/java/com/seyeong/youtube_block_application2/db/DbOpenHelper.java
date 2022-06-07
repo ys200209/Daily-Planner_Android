@@ -2,13 +2,17 @@ package com.seyeong.youtube_block_application2.db;
 
 import android.content.ContentValues;
 import android.content.Context;
+import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.util.Log;
 
 import com.seyeong.youtube_block_application2.CustomView;
+import com.seyeong.youtube_block_application2.domain.Calender;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class DbOpenHelper {
     private static final String DATABASE_NAME = "InnerDatabase(SQLite).db";
@@ -26,19 +30,19 @@ public class DbOpenHelper {
         @Override
         public void onCreate(SQLiteDatabase db){
             db.execSQL(RegisterRequest.Calender._CREATE);
-            db.execSQL(RegisterRequest.DailyPlan._CREATE);
+            db.execSQL(RegisterRequest.Daily._CREATE);
         }
 
         @Override
         public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion){
             db.execSQL("DROP TABLE IF EXISTS "+RegisterRequest.Calender._TABLENAME);
-            db.execSQL("DROP TABLE IF EXISTS "+RegisterRequest.DailyPlan._TABLENAME);
+            db.execSQL("DROP TABLE IF EXISTS "+RegisterRequest.Daily._TABLENAME);
             onCreate(db);
         }
 
         public void onDrop(SQLiteDatabase db){
             db.execSQL("DROP TABLE IF EXISTS " + RegisterRequest.Calender._TABLENAME);
-            db.execSQL("DROP TABLE IF EXISTS " + RegisterRequest.DailyPlan._TABLENAME);
+            db.execSQL("DROP TABLE IF EXISTS " + RegisterRequest.Daily._TABLENAME);
         }
     }
 
@@ -122,10 +126,15 @@ public class DbOpenHelper {
         return list;
     }*/
 
-    public ArrayList<CustomView> selectPlanList() {
+    // SELECT : 특정 날짜의 할 일을 가져오는 메서드
+    public ArrayList<CustomView> selectPlanList(int Year, int Month, int Day) {
         ArrayList<CustomView> list = new ArrayList<>();
 
-        String SQL = "SELECT * FROM " + RegisterRequest.DailyPlan._TABLENAME;
+        String day_key = "" + Year + Month + Day;
+
+
+        String SQL = "SELECT * FROM " + RegisterRequest.Daily._TABLENAME;
+        return null;
     }
 
     // SELECT 구문 (프로그레스바만 개별로 추출하기 위한 메서드)
@@ -179,11 +188,45 @@ public class DbOpenHelper {
         return mDB.insert(RegisterRequest.CreateTB._TABLENAME2, null, values);
     }*/
 
-    public long insertPlan(String from, String to) {
+    // 특정 날짜를 클릭 시 해당 날짜의 일과표를 보여주는 메서드
+    public List<CustomView> dailyShow(Calender calender) {
+
+        String SQL = "SELECT * FROM " + RegisterRequest.Daily._TABLENAME + " WHERE day_key = " +
+                ("" + calender.getYear() + calender.getMonth() + calender.getDay()) +
+                " ORDER BY " + RegisterRequest.Daily.START;
+
+        List<CustomView> list = new ArrayList<>();
+
+        Cursor cursor = mDB.rawQuery(SQL, null);
+        int idx_start = cursor.getColumnIndex("start");
+        int idx_end = cursor.getColumnIndex("end");
+        CustomView customView;
+        while(cursor.moveToNext()) {
+            customView = new CustomView(cursor.getString(idx_start),
+                    cursor.getString(idx_end));
+            list.add(customView);
+        }
+
+        return list;
+    }
+
+    // 일일 계획에서 '왼료'를 누를 시 저장되는 계획들
+    public long save(Calender calender, List<CustomView> plans) {
         ContentValues values = new ContentValues();
-        values.put(RegisterRequest.DailyPlan.FROM, from);
-        values.put(RegisterRequest.DailyPlan.TO, to);
-        return mDB.insert(RegisterRequest.DailyPlan._TABLENAME, null, values);
+        String day_key = ""+calender.getYear()+calender.getMonth()+calender.getDay();
+
+        Log.d("태그", "plans.size() : " + plans.size());
+
+        int count=0;
+        for(CustomView plan : plans) {
+            values.put(RegisterRequest.Daily.START, plan.getFrom());
+            values.put(RegisterRequest.Daily.END, plan.getTo());
+            values.put(RegisterRequest.Calender.DAY_KEY, day_key);
+            mDB.insert(RegisterRequest.Daily._TABLENAME, null, values);
+            count++;
+        }
+
+        return count; // 삽입된 ROW 수만큼 count
     }
 
     // UPDATE 구문 (프로그레스값 변경)
@@ -215,4 +258,25 @@ public class DbOpenHelper {
         return mDB.delete(RegisterRequest.CreateTB._TABLENAME2,
                 "title = ?", new String[]{title});
     }*/
+
+    // 하루 일과를 생성함
+    public long createDaily(Calender calender) {
+        ContentValues values = new ContentValues();
+        values.put(RegisterRequest.Calender.DAY_KEY, ""+calender.getYear()+calender.getMonth()+calender.getDay());
+        values.put(RegisterRequest.Calender.YEAR, calender.getYear());
+        values.put(RegisterRequest.Calender.MONTH, calender.getMonth());
+        values.put(RegisterRequest.Calender.DAY, calender.getDay());
+
+        Log.d("태그", "하루 생성");
+        return mDB.insert(RegisterRequest.Calender._TABLENAME, null, values);
+    }
+
+    // 하루 일과를 다시 세팅하도록 날짜를 새로 생성해줌
+    public int delete(Calender calender) {
+        Log.d("태그", "하루 삭제");
+        return mDB.delete(RegisterRequest.Calender._TABLENAME,
+                "day_key = ?", new String[]{
+                        ""+calender.getYear()+calender.getMonth()+calender.getDay()
+        });
+    }
 }

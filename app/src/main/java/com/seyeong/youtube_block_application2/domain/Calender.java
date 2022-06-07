@@ -1,10 +1,10 @@
-package com.seyeong.youtube_block_application2;
+package com.seyeong.youtube_block_application2.domain;
 
-public class MonthDate {
+public class Calender {
 
     private int YEAR, MONTH, DAY;
 
-    public MonthDate(int YEAR, int MONTH, int DAY) {
+    public Calender(int YEAR, int MONTH, int DAY) {
         this.YEAR = YEAR;
         this.MONTH = MONTH;
         this.DAY = DAY;
@@ -24,11 +24,11 @@ public class MonthDate {
 
     @Override
     public boolean equals(Object obj) {
-        MonthDate aMonthDate = (MonthDate)obj;
+        Calender aCalender = (Calender)obj;
 
-        if (this.YEAR == aMonthDate.getYear() &&
-        this.MONTH == aMonthDate.getMonth() &&
-        this.DAY == aMonthDate.getDay()) return true;
+        if (this.YEAR == aCalender.getYear() &&
+        this.MONTH == aCalender.getMonth() &&
+        this.DAY == aCalender.getDay()) return true;
 
         return false;
     }

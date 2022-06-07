@@ -4,7 +4,6 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.app.TimePickerDialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -18,6 +17,7 @@ import android.widget.TimePicker;
 import android.widget.Toast;
 
 import com.seyeong.youtube_block_application2.db.DbOpenHelper;
+import com.seyeong.youtube_block_application2.domain.Calender;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -28,8 +28,8 @@ public class DailyActivity extends AppCompatActivity {
     static private CustomAdapter adapter;
     private ArrayList<CustomView> customList;
     private TextView backSpace;
-    private TextView from, to, add;
-    private DbOpenHelper mDbOpenHelper;
+    private TextView from, to, add, save;
+    private DbOpenHelper mDbOpenHelper = new DbOpenHelper(DailyActivity.this);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,18 +42,19 @@ public class DailyActivity extends AppCompatActivity {
         from = findViewById(R.id.from);
         to = findViewById(R.id.to);
         add = findViewById(R.id.add);
+        save = findViewById(R.id.save);
 
         Intent i = getIntent();
-        MonthDate monthDate = new MonthDate(
+        Calender calender = new Calender(
                 i.getIntExtra("year", 1),
                 i.getIntExtra("month", 1),
                 i.getIntExtra("day", 1));
 
 
         TextView date = findViewById(R.id.date);
-        date.setText(monthDate.getMonth() + "월 " + monthDate.getDay() + "일");
+        date.setText(calender.getMonth() + "월 " + calender.getDay() + "일");
 
-        openPlan();
+        openPlan(calender);
 
         adapter = new CustomAdapter(DailyActivity.this, customList);
         customListView.setAdapter(adapter);
@@ -75,6 +76,12 @@ public class DailyActivity extends AppCompatActivity {
 
         add.setOnClickListener((v) -> {
             customList.add(new CustomView(from.getText().toString(), to.getText().toString()));
+            adapter.notifyDataSetChanged();
+        });
+
+        save.setOnClickListener((v) -> {
+            savePlan(calender);
+            finish();
         });
 
     }
@@ -176,7 +183,7 @@ public class DailyActivity extends AppCompatActivity {
 
             CustomView country = customList.get(i);
 
-            mDbOpenHelper.openR();
+            /*mDbOpenHelper.openR();
             Map<String, String> map = mDbOpenHelper.selectProgress();
             mDbOpenHelper.close();
 
@@ -185,16 +192,39 @@ public class DailyActivity extends AppCompatActivity {
             holder.progressBar.setProgress(Integer.parseInt(map.get("progress"+i)));
             holder.progressPersent.setText(map.get("progress"+i) + "%");
             holder.fileSize.setText(country.getFileSize());
-            holder.tvDownloadStatus.setText(map.get("isdownload"+i));
-            holder.title.setTag(country);
+            holder.tvDownloadStatus.setText(map.get("isdownload"+i));*/
+
+
+            holder.from.setText(country.getFrom());
+            holder.to.setText(country.getTo());
+            holder.delete.setOnClickListener((v) -> {
+                customList.remove(i);
+                adapter.notifyDataSetChanged();
+            });
+            holder.from.setTag(country);
             return view;
         }
     }
 
-    public void openPlan() {
+    public void openPlan(Calender calender) {
         mDbOpenHelper.openR();
+        List<CustomView> list = mDbOpenHelper.dailyShow(calender);
+        mDbOpenHelper.close();
 
+        // if (list.size() < 1) return;
+        customList.clear();
+        customList.addAll(list);
+    }
 
+    public void savePlan(Calender calender) { // 선택한 날짜에 대한 객체를 가져옴 (직접 만든 객체)
+        mDbOpenHelper.openW();
+
+        mDbOpenHelper.delete(calender); // 하루 일과를 삭제함.
+
+        if (customList.size() < 1) return; // 계획이 하나도 없다면 아무런 활동도 하지 않도록.
+
+        mDbOpenHelper.createDaily(calender); // 하루 일과를 생성하도록
+        mDbOpenHelper.save(calender, customList); // 일과를 저장하도록
 
         mDbOpenHelper.close();
     }

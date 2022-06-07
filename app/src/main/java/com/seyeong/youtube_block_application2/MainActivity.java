@@ -24,6 +24,7 @@ import com.prolificinteractive.materialcalendarview.CalendarDay;
 import com.prolificinteractive.materialcalendarview.CalendarMode;
 import com.prolificinteractive.materialcalendarview.MaterialCalendarView;
 import com.prolificinteractive.materialcalendarview.OnDateSelectedListener;
+import com.seyeong.youtube_block_application2.db.DbOpenHelper;
 import com.seyeong.youtube_block_application2.decorators.*;
 
 import java.util.ArrayList;
@@ -34,7 +35,7 @@ import java.util.concurrent.Executors;
 
 public class MainActivity extends AppCompatActivity {
 
-
+    private DbOpenHelper mDbOpenHelper = new DbOpenHelper(MainActivity.this);
     String time,kcal,menu;
     private final OneDayDecorator oneDayDecorator = new OneDayDecorator();
     Cursor cursor;
@@ -44,6 +45,10 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_calendar);
+
+        mDbOpenHelper.openW();
+        mDbOpenHelper.update();
+        mDbOpenHelper.close();
 
         materialCalendarView = (MaterialCalendarView)findViewById(R.id.calendarView);
 
