@@ -2,6 +2,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.seyeong.youtube_block_application2">
 
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
@@ -9,6 +11,11 @@
         android:roundIcon="@mipmap/ic_launcher_foreground"
         android:supportsRtl="true"
         android:theme="@style/Theme.Youtube_Block_Application2">
+
+        <service
+            android:name=".PlannerService"
+            android:enabled="true" />
+
         <activity
             android:name=".DailyActivity"
             android:exported="false" />

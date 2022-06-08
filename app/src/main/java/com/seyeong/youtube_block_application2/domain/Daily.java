@@ -10,6 +10,12 @@ public class Daily {
         this.to = to;
     }
 
+    public int getFrom() {
+        return from;
+    }
 
+    public int getTo() {
+        return to;
+    }
 
 }

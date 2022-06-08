@@ -6,10 +6,12 @@ import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.os.Build;
 import android.util.Log;
 
 import com.seyeong.youtube_block_application2.CustomView;
 import com.seyeong.youtube_block_application2.domain.Calender;
+import com.seyeong.youtube_block_application2.domain.Daily;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -43,6 +45,19 @@ public class DbOpenHelper {
         public void onDrop(SQLiteDatabase db){
             db.execSQL("DROP TABLE IF EXISTS " + RegisterRequest.Calender._TABLENAME);
             db.execSQL("DROP TABLE IF EXISTS " + RegisterRequest.Daily._TABLENAME);
+        }
+
+        @Override
+        public void onConfigure(SQLiteDatabase db) {
+            super.onConfigure(db);
+            if (!db.isReadOnly()) { // 일정 삭제를 위한 외래키 설정 ON (Default는 OFF)
+                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN) {
+                    String query = String.format("PRAGMA foreign_key = %s", "ON");
+                    db.execSQL(query);
+                } else {
+                    db.setForeignKeyConstraintsEnabled(true);
+                }
+            }
         }
     }
 
@@ -126,17 +141,6 @@ public class DbOpenHelper {
         return list;
     }*/
 
-    // SELECT : 특정 날짜의 할 일을 가져오는 메서드
-    public ArrayList<CustomView> selectPlanList(int Year, int Month, int Day) {
-        ArrayList<CustomView> list = new ArrayList<>();
-
-        String day_key = "" + Year + Month + Day;
-
-
-        String SQL = "SELECT * FROM " + RegisterRequest.Daily._TABLENAME;
-        return null;
-    }
-
     // SELECT 구문 (프로그레스바만 개별로 추출하기 위한 메서드)
     /*public Map<String, String> selectProgress() {
         int i = 0;
@@ -189,39 +193,39 @@ public class DbOpenHelper {
     }*/
 
     // 특정 날짜를 클릭 시 해당 날짜의 일과표를 보여주는 메서드
-    public List<CustomView> dailyShow(Calender calender) {
+    public List<Daily> dailyShow(Calender calender) {
 
         String SQL = "SELECT * FROM " + RegisterRequest.Daily._TABLENAME + " WHERE day_key = " +
                 ("" + calender.getYear() + calender.getMonth() + calender.getDay()) +
                 " ORDER BY " + RegisterRequest.Daily.START;
 
-        List<CustomView> list = new ArrayList<>();
+        List<Daily> list = new ArrayList<>();
 
         Cursor cursor = mDB.rawQuery(SQL, null);
         int idx_start = cursor.getColumnIndex("start");
         int idx_end = cursor.getColumnIndex("end");
-        CustomView customView;
+        Daily daily;
         while(cursor.moveToNext()) {
-            customView = new CustomView(cursor.getString(idx_start),
-                    cursor.getString(idx_end));
-            list.add(customView);
+            daily = new Daily(Integer.parseInt(cursor.getString(idx_start)),
+                    Integer.parseInt(cursor.getString(idx_end)));
+            list.add(daily);
         }
 
         return list;
     }
 
     // 일일 계획에서 '왼료'를 누를 시 저장되는 계획들
-    public long save(Calender calender, List<CustomView> plans) {
+    public long save(Calender calender, List<Daily> plans) {
         ContentValues values = new ContentValues();
         String day_key = ""+calender.getYear()+calender.getMonth()+calender.getDay();
 
-        Log.d("태그", "plans.size() : " + plans.size());
+        Log.d("태그", "day_key : " + day_key);
 
         int count=0;
-        for(CustomView plan : plans) {
+        for(Daily plan : plans) {
             values.put(RegisterRequest.Daily.START, plan.getFrom());
             values.put(RegisterRequest.Daily.END, plan.getTo());
-            values.put(RegisterRequest.Calender.DAY_KEY, day_key);
+            values.put(RegisterRequest.Daily.DAY_KEY, day_key);
             mDB.insert(RegisterRequest.Daily._TABLENAME, null, values);
             count++;
         }
@@ -262,21 +266,27 @@ public class DbOpenHelper {
     // 하루 일과를 생성함
     public long createDaily(Calender calender) {
         ContentValues values = new ContentValues();
-        values.put(RegisterRequest.Calender.DAY_KEY, ""+calender.getYear()+calender.getMonth()+calender.getDay());
+
+        String day_key = ""+calender.getYear()+calender.getMonth()+calender.getDay();
+        values.put(RegisterRequest.Calender.DAY_KEY, day_key);
         values.put(RegisterRequest.Calender.YEAR, calender.getYear());
         values.put(RegisterRequest.Calender.MONTH, calender.getMonth());
         values.put(RegisterRequest.Calender.DAY, calender.getDay());
 
-        Log.d("태그", "하루 생성");
+        Log.d("태그", "하루 생성 : " + day_key);
         return mDB.insert(RegisterRequest.Calender._TABLENAME, null, values);
+        // INSERT INTO Calender VALUES('202267', 2022, 6, 7);
     }
 
     // 하루 일과를 다시 세팅하도록 날짜를 새로 생성해줌
     public int delete(Calender calender) {
-        Log.d("태그", "하루 삭제");
-        return mDB.delete(RegisterRequest.Calender._TABLENAME,
-                "day_key = ?", new String[]{
-                        ""+calender.getYear()+calender.getMonth()+calender.getDay()
-        });
+        String day_key = ""+calender.getYear()+calender.getMonth()+calender.getDay();
+
+        int deleteCount = mDB.delete(RegisterRequest.Calender._TABLENAME,
+                "day_key = ?", new String[]{day_key});
+        Log.d("태그", "하루 삭제 : " + deleteCount);
+
+        return deleteCount;
+        // DELETE FROM Calender WHERE day_key = '202267';
     }
 }

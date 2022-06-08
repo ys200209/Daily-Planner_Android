@@ -6,6 +6,7 @@ import android.app.TimePickerDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -18,15 +19,17 @@ import android.widget.Toast;
 
 import com.seyeong.youtube_block_application2.db.DbOpenHelper;
 import com.seyeong.youtube_block_application2.domain.Calender;
+import com.seyeong.youtube_block_application2.domain.Daily;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.List;
 
 public class DailyActivity extends AppCompatActivity {
     private ListView customListView;
     static private CustomAdapter adapter;
-    private ArrayList<CustomView> customList;
+    private ArrayList<Daily> dailyList;
     private TextView backSpace;
     private TextView from, to, add, save;
     private DbOpenHelper mDbOpenHelper = new DbOpenHelper(DailyActivity.this);
@@ -37,7 +40,7 @@ public class DailyActivity extends AppCompatActivity {
         setContentView(R.layout.activity_daily);
 
         customListView = (ListView) findViewById(R.id.listView);
-        customList = new ArrayList<CustomView>();
+        dailyList = new ArrayList<Daily>();
         backSpace = findViewById(R.id.backSpace);
         from = findViewById(R.id.from);
         to = findViewById(R.id.to);
@@ -56,7 +59,7 @@ public class DailyActivity extends AppCompatActivity {
 
         openPlan(calender);
 
-        adapter = new CustomAdapter(DailyActivity.this, customList);
+        adapter = new CustomAdapter(DailyActivity.this, dailyList);
         customListView.setAdapter(adapter);
 
         backSpace.setOnClickListener(new View.OnClickListener() {
@@ -75,7 +78,14 @@ public class DailyActivity extends AppCompatActivity {
         });
 
         add.setOnClickListener((v) -> {
-            customList.add(new CustomView(from.getText().toString(), to.getText().toString()));
+            String[] fromTime = from.getText().toString().split(":");
+            String[] toTime = to.getText().toString().split(":");
+
+            dailyList.add(new Daily(Integer.parseInt(fromTime[0]) * 60 + Integer.parseInt(fromTime[1]),
+                    Integer.parseInt(toTime[0]) * 60 + Integer.parseInt(toTime[1])));
+            Collections.sort(dailyList, (c1, c2) -> {
+                return c1.getFrom() - c2.getFrom();
+            });
             adapter.notifyDataSetChanged();
         });
 
@@ -96,25 +106,13 @@ public class DailyActivity extends AppCompatActivity {
             @Override
             public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
                 if (view.isShown()) {
-                    myCalender.set(Calendar.HOUR_OF_DAY, hourOfDay);
-                    myCalender.set(Calendar.MINUTE, minute);
-
-                    Toast.makeText(getApplicationContext(), hourOfDay + ", " + minute , Toast.LENGTH_SHORT).show();
+                    myCalender.set(Calendar.HOUR_OF_DAY, Integer.parseInt(from.getText().toString().split(":")[0]));
+                    myCalender.set(Calendar.MINUTE, Integer.parseInt(to.getText().toString().split(":")[1]));
 
                     if (title.equals("From :")) {
-                        from.setText(hourOfDay + ":" + minute);
-                        /*if (hourOfDay < 10) {
-                            from.setText("0"+hourOfDay+":"+mi);
-                        } else {
-
-                        }*/
+                        from.setText(String.format("%02d", hourOfDay) + ":" + String.format("%02d", minute));
                     } else {
-                        to.setText(hourOfDay + ":" + minute);
-                        /*if (hourOfDay < 10) {
-
-                        } else {
-
-                        }*/
+                        to.setText(String.format("%02d", hourOfDay) + ":" + String.format("%02d", minute));
                     }
                 }
             }
@@ -130,14 +128,11 @@ public class DailyActivity extends AppCompatActivity {
     public class CustomAdapter extends BaseAdapter {
 
         private Context context;
-        private List<CustomView> customViewList;
-        public String downloadStatus = "다운로드중...";
-        public int public_progress = 0;
-        public String public_percent;
+        private List<Daily> dailyList;
 
-        public CustomAdapter(Context context, List<CustomView> customViewList) {
+        public CustomAdapter(Context context, List<Daily> dailyList) {
             this.context = context;
-            this.customViewList = customViewList;
+            this.dailyList = dailyList;
         }
 
         public class ViewHolder {
@@ -148,12 +143,12 @@ public class DailyActivity extends AppCompatActivity {
 
         @Override
         public int getCount() {
-            return customViewList.size();
+            return dailyList.size();
         }
 
         @Override
         public Object getItem(int i) {
-            return customViewList.get(i);
+            return dailyList.get(i);
         }
 
         @Override
@@ -169,7 +164,7 @@ public class DailyActivity extends AppCompatActivity {
                 LayoutInflater vi = (LayoutInflater) getSystemService(
                         Context.LAYOUT_INFLATER_SERVICE);
                 view = vi.inflate(R.layout.custom_view, null);
-                //final TextView work = (TextView) view.findViewById(R.id.titl);
+
                 holder = new ViewHolder();
                 holder.from = (TextView) view.findViewById(R.id.customFrom);
                 holder.to = (TextView) view.findViewById(R.id.customTo);
@@ -181,24 +176,12 @@ public class DailyActivity extends AppCompatActivity {
                 holder = (ViewHolder) view.getTag();
             }
 
-            CustomView country = customList.get(i);
+            Daily country = dailyList.get(i);
 
-            /*mDbOpenHelper.openR();
-            Map<String, String> map = mDbOpenHelper.selectProgress();
-            mDbOpenHelper.close();
-
-            holder.thumbnail.setImageBitmap(country.getmBitmap());
-            holder.title.setText(country.getTitle()+"  ");
-            holder.progressBar.setProgress(Integer.parseInt(map.get("progress"+i)));
-            holder.progressPersent.setText(map.get("progress"+i) + "%");
-            holder.fileSize.setText(country.getFileSize());
-            holder.tvDownloadStatus.setText(map.get("isdownload"+i));*/
-
-
-            holder.from.setText(country.getFrom());
-            holder.to.setText(country.getTo());
+            holder.from.setText(String.format("%02d", country.getFrom()/60) + ":" + String.format("%02d", country.getFrom()%60));
+            holder.to.setText(String.format("%02d", country.getTo()/60) + ":" + String.format("%02d", country.getTo()%60));
             holder.delete.setOnClickListener((v) -> {
-                customList.remove(i);
+                dailyList.remove(i);
                 adapter.notifyDataSetChanged();
             });
             holder.from.setTag(country);
@@ -207,13 +190,16 @@ public class DailyActivity extends AppCompatActivity {
     }
 
     public void openPlan(Calender calender) {
+        dailyList.clear();
+
         mDbOpenHelper.openR();
-        List<CustomView> list = mDbOpenHelper.dailyShow(calender);
+        List<Daily> plans = mDbOpenHelper.dailyShow(calender);
         mDbOpenHelper.close();
 
+        Log.d("태그", "(openPlan) list.size() : " + plans.size());
+
         // if (list.size() < 1) return;
-        customList.clear();
-        customList.addAll(list);
+        dailyList.addAll(plans);
     }
 
     public void savePlan(Calender calender) { // 선택한 날짜에 대한 객체를 가져옴 (직접 만든 객체)
@@ -221,10 +207,13 @@ public class DailyActivity extends AppCompatActivity {
 
         mDbOpenHelper.delete(calender); // 하루 일과를 삭제함.
 
-        if (customList.size() < 1) return; // 계획이 하나도 없다면 아무런 활동도 하지 않도록.
+        if (dailyList.size() < 1) {
+            Log.d("태그", "return;");
+            return; // 계획이 하나도 없다면 아무런 활동도 하지 않도록.
+        }
 
         mDbOpenHelper.createDaily(calender); // 하루 일과를 생성하도록
-        mDbOpenHelper.save(calender, customList); // 일과를 저장하도록
+        mDbOpenHelper.save(calender, dailyList); // 일과를 저장하도록
 
         mDbOpenHelper.close();
     }
