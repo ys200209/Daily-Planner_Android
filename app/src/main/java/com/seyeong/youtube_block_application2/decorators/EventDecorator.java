@@ -7,6 +7,7 @@ import android.graphics.drawable.Drawable;
 import com.prolificinteractive.materialcalendarview.CalendarDay;
 import com.prolificinteractive.materialcalendarview.DayViewDecorator;
 import com.prolificinteractive.materialcalendarview.DayViewFacade;
+import com.prolificinteractive.materialcalendarview.spans.DotSpan;
 import com.seyeong.youtube_block_application2.R;
 
 import java.util.Collection;
@@ -35,6 +36,6 @@ public class EventDecorator implements DayViewDecorator {
     @Override
     public void decorate(DayViewFacade view) {
         view.setSelectionDrawable(drawable);
-        //view.addSpan(new DotSpan(5, color)); // 날자밑에 점
+        // view.addSpan(new DotSpan(5, color)); // 날자밑에 점
     }
 }

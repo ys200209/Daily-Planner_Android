@@ -5,19 +5,23 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.app.Activity;
 import android.app.ActivityManager;
+import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.TimePickerDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.accessibility.AccessibilityManager;
 import android.widget.BaseAdapter;
 import android.widget.ListView;
 import android.widget.TimePicker;
@@ -48,6 +52,10 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_calendar);
+
+        /* if (!checkAccessibilityPermissions()) { // 만약 접근성 권한이 허가되지 않은 상태라면
+            requestAccessibilty();
+        } */
 
         mDbOpenHelper.openW();
         mDbOpenHelper.create();
@@ -100,6 +108,7 @@ public class MainActivity extends AppCompatActivity {
         });
 
         serviceStart();
+        // isAppRunning(MainActivity.this, "com.google.android.youtube");
 
     }
 
@@ -173,6 +182,46 @@ public class MainActivity extends AppCompatActivity {
             }
         }
         return false;
+    }
+
+    // (context, "com.google.android.youtube")
+    public static boolean isAppRunning(final Context context, final String packageName) {
+        final ActivityManager activityManager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
+        final List<ActivityManager.RunningAppProcessInfo> procInfos = activityManager.getRunningAppProcesses();
+
+        if (procInfos != null)
+        {
+            for (final ActivityManager.RunningAppProcessInfo processInfo : procInfos) {
+                Log.d("태그", "Name : " + processInfo.processName);
+                if (processInfo.processName.equals(packageName)) {
+                    Log.d("태그", "Name : Equals App : com.google.android.youtube");
+                    // return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    public boolean checkAccessibilityPermissions() { // 현재 접근성이 허가된 상태인지를 boolean 값으로 리턴
+        AccessibilityManager accessibilityManager =
+                (AccessibilityManager) getApplicationContext().getSystemService(Context.ACCESSIBILITY_SERVICE);
+
+        return accessibilityManager.isEnabled();
+    }
+
+    public void requestAccessibilty() { // 허가되지 않은 상태라면 접근성 요청을 보냄
+        new AlertDialog.Builder(MainActivity.this)
+                .setTitle("접근성 권한 요청")
+                .setMessage("원활한 앱 동작을 위해서 접근성이 필요합니다.")
+                .setPositiveButton("동의함", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        Intent intent = new Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS);
+                        startActivityForResult(intent, 0); // 접근성 권한 설정으로 인텐트 보냄
+                    }
+                })
+                .setCancelable(false)
+                .show();
     }
 
 }

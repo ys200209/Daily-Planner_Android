@@ -2,7 +2,9 @@ package com.seyeong.youtube_block_application2;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.app.ActivityManager;
 import android.app.TimePickerDialog;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -34,6 +36,11 @@ public class DailyActivity extends AppCompatActivity {
     private TextView from, to, add, save;
     private DbOpenHelper mDbOpenHelper = new DbOpenHelper(DailyActivity.this);
 
+    private int lastSelectedFromHour=0;
+    private int lastSelectedFromMinute=0;
+    private int lastSelectedToHour=0;
+    private int lastSelectedToMinute=0;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -61,6 +68,8 @@ public class DailyActivity extends AppCompatActivity {
 
         adapter = new CustomAdapter(DailyActivity.this, dailyList);
         customListView.setAdapter(adapter);
+
+        initTimePicker(); // 첫 TimePicker 초기화 값을 현재 시각으로 나타냄
 
         backSpace.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -98,9 +107,6 @@ public class DailyActivity extends AppCompatActivity {
 
     public void showHourPicker(String title) {
         final Calendar myCalender = Calendar.getInstance();
-        int hour = myCalender.get(Calendar.HOUR_OF_DAY);
-        int minute = myCalender.get(Calendar.MINUTE);
-
 
         TimePickerDialog.OnTimeSetListener myTimeListener = new TimePickerDialog.OnTimeSetListener() {
             @Override
@@ -111,14 +117,24 @@ public class DailyActivity extends AppCompatActivity {
 
                     if (title.equals("From :")) {
                         from.setText(String.format("%02d", hourOfDay) + ":" + String.format("%02d", minute));
+                        lastSelectedFromHour = hourOfDay;
+                        lastSelectedFromMinute = minute;
                     } else {
                         to.setText(String.format("%02d", hourOfDay) + ":" + String.format("%02d", minute));
+                        lastSelectedToHour = hourOfDay;
+                        lastSelectedToMinute = minute;
                     }
+
                 }
             }
         };
 
-        TimePickerDialog timePickerDialog = new TimePickerDialog(DailyActivity.this, android.R.style.Theme_Holo_Light_Dialog_NoActionBar, myTimeListener, hour, minute, true);
+        TimePickerDialog timePickerDialog = null;
+        if (title.equals("From :")) {
+            timePickerDialog = new TimePickerDialog(DailyActivity.this, android.R.style.Theme_Holo_Light_Dialog_NoActionBar, myTimeListener, lastSelectedFromHour, lastSelectedFromMinute, true);
+        } else {
+            timePickerDialog = new TimePickerDialog(DailyActivity.this, android.R.style.Theme_Holo_Light_Dialog_NoActionBar, myTimeListener, lastSelectedToHour, lastSelectedToMinute, true);
+        }
         timePickerDialog.setTitle(title);
         timePickerDialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
         timePickerDialog.show();
@@ -216,6 +232,14 @@ public class DailyActivity extends AppCompatActivity {
         mDbOpenHelper.save(calender, dailyList); // 일과를 저장하도록
 
         mDbOpenHelper.close();
+    }
+
+    public void initTimePicker() {
+        Calendar initCalender = Calendar.getInstance();
+        lastSelectedFromHour = initCalender.get(Calendar.HOUR_OF_DAY);
+        lastSelectedFromMinute = initCalender.get(Calendar.MINUTE);
+        lastSelectedToHour = initCalender.get(Calendar.HOUR_OF_DAY);
+        lastSelectedToMinute = initCalender.get(Calendar.MINUTE);
     }
 
 }

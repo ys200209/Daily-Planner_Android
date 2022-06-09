@@ -1,17 +1,36 @@
 package com.seyeong.youtube_block_application2;
 
+import android.app.Activity;
+import android.app.ActivityManager;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.app.usage.UsageStats;
+import android.app.usage.UsageStatsManager;
+import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.IBinder;
 import android.util.Log;
 
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Iterator;
+import java.util.List;
+import java.util.SortedMap;
+import java.util.TreeMap;
+
+import static android.provider.ContactsContract.Directory.PACKAGE_NAME;
 
 public class PlannerService extends Service {
     public static final String CHANNEL_ID = "ForegroundServiceChannel3";
@@ -41,8 +60,12 @@ public class PlannerService extends Service {
                 .setContentIntent(pendingIntent).build();
         startForeground(3, notification);
 
+        startThread();
+
         return START_STICKY;
     }
+
+
 
     private void createNotificationChannel() {
         Log.d("태그", "createNotificationChannel");
@@ -56,6 +79,35 @@ public class PlannerService extends Service {
             manager.createNotificationChannel(serviceChannel);
 
         }
+    }
+
+    public void startThread() {
+
+        new Thread(() -> {
+            int i=0;
+            while(i < 1) {
+                try {
+                    isAppRunning(PlannerService.this, "com.google.android.youtube");
+                    Thread.sleep(3000);
+                } catch (PackageManager.NameNotFoundException | InterruptedException e) {
+                    e.printStackTrace();
+                }
+                i++;
+            }
+            Log.d("태그", "스레드 종료");
+        }).start();
+
+
+    }
+
+    // (context, "com.google.android.youtube")
+    public boolean isAppRunning(final Context context, final String packageName) throws PackageManager.NameNotFoundException {
+
+
+
+
+
+        return false;
     }
 
 }

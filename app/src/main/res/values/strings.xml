@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">공부해</string>
+    <string name="accessibility_service_name">WindowChangeDetectingService</string>
 </resources>
