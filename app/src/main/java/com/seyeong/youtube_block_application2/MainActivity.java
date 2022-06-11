@@ -34,6 +34,9 @@ import com.prolificinteractive.materialcalendarview.OnDateSelectedListener;
 import com.seyeong.youtube_block_application2.db.DbOpenHelper;
 import com.seyeong.youtube_block_application2.decorators.*;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -97,12 +100,13 @@ public class MainActivity extends AppCompatActivity {
 
                 materialCalendarView.clearSelection();
 
-                Intent i = new Intent(MainActivity.this, DailyActivity.class);
+                /*Intent i = new Intent(MainActivity.this, DailyActivity.class);
                 i.putExtra("year", Year);
                 i.putExtra("month", Month);
                 i.putExtra("day", Day);
-                startActivity(i);
+                startActivity(i);*/
 
+                // startShell();
 
             }
         });
@@ -223,5 +227,26 @@ public class MainActivity extends AppCompatActivity {
                 .setCancelable(false)
                 .show();
     }
+
+    /*public void startShell() {
+        Log.d("태그", "startShell");
+        try {
+            // Process process = Runtime.getRuntime().exec("pidof com.google.android.youtube");
+            // Process process = Runtime.getRuntime().exec("pm list packages -f".split(" "));
+            Process process = Runtime.getRuntime().exec("ps -ef");
+            process.waitFor();
+
+            BufferedReader stdInput = new BufferedReader(new
+                    InputStreamReader(process.getInputStream()));
+
+            String s = null;
+            while ((s = stdInput.readLine()) != null) {
+                Log.d("태그", s);
+            }
+
+        } catch (IOException | InterruptedException e) {
+            e.printStackTrace();
+        }
+    }*/
 
 }

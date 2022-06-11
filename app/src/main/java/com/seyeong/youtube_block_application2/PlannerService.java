@@ -22,6 +22,10 @@ import android.util.Log;
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
 
+import java.io.BufferedReader;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -85,11 +89,11 @@ public class PlannerService extends Service {
 
         new Thread(() -> {
             int i=0;
-            while(i < 1) {
+            while(i < 2) {
                 try {
-                    isAppRunning(PlannerService.this, "com.google.android.youtube");
+                    isAppRunning();
                     Thread.sleep(3000);
-                } catch (PackageManager.NameNotFoundException | InterruptedException e) {
+                } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
                 i++;
@@ -101,13 +105,37 @@ public class PlannerService extends Service {
     }
 
     // (context, "com.google.android.youtube")
-    public boolean isAppRunning(final Context context, final String packageName) throws PackageManager.NameNotFoundException {
+    public void isAppRunning() {
+        Log.d("태그", "startShell");
+        try {
+            // Process process = Runtime.getRuntime().exec("pidof com.google.android.youtube");
+            // Process process = Runtime.getRuntime().exec("pm list packages -f".split(" "));
+            // String[] cmd = {"/bin/sh", "-c", "ps -efn | grep com.google.android.youtube"};
+            String[] cmd = {"/bin/sh", "-c", "ps -efn | grep com.google.android.youtube"}; // 10635
+            Process process = Runtime.getRuntime().exec(cmd);
+            process.waitFor();
 
+            BufferedReader stdInput = new BufferedReader(new
+                    InputStreamReader(process.getInputStream()));
 
+            BufferedReader stdError = new BufferedReader(new
+                    InputStreamReader(process.getErrorStream()));
 
+            String s = null;
 
+            while ((s = stdInput.readLine()) != null) {
+                Log.d("태그", "(Success) : " + s);
+            }
 
-        return false;
+            // Read any errors from the attempted command
+            while ((s = stdError.readLine()) != null) {
+                Log.d("태그", "(Fail) : " + s);
+            }
+
+        } catch (IOException | InterruptedException e) {
+            Log.d("태그", "Exception");
+            e.printStackTrace();
+        }
     }
 
 }
