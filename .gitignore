@@ -13,5 +13,5 @@
 .externalNativeBuild
 .cxx
 local.properties
-*/CheckPackageName.java
-*/PlannerService.java
+/app/src/main/java/com/seyeong/youtube_block_application2/CheckPackageName.java
+/app/src/main/java/com/seyeong/youtube_block_application2/PlannerService.java
