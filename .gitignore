@@ -13,5 +13,5 @@
 .externalNativeBuild
 .cxx
 local.properties
-C:\Users\Lee\AndroidStudioProjects\Youtube_Block_Application2\app\src\main\java\com\seyeong\youtube_block_application2/CheckPackageName.java
-C:\Users\Lee\AndroidStudioProjects\Youtube_Block_Application2\app\src\main\java\com\seyeong\youtube_block_application2/PlannerService.java
+/app/src/main/java/com/seyeong/youtube_block_application2/CheckPackageName.java
+/app/src/main/java/com/seyeong/youtube_block_application2/PlannerService.java
