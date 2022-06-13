@@ -4,28 +4,23 @@ import android.app.Activity;
 import android.content.Context;
 import android.graphics.drawable.Drawable;
 
-
 import com.prolificinteractive.materialcalendarview.CalendarDay;
 import com.prolificinteractive.materialcalendarview.DayViewDecorator;
 import com.prolificinteractive.materialcalendarview.DayViewFacade;
-import com.prolificinteractive.materialcalendarview.spans.DotSpan;
 import com.seyeong.youtube_block_application2.R;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 
-/**
- * Decorate several days with a dot
- */
-public class EventDecorator implements DayViewDecorator {
+public class RemoveDecorator implements DayViewDecorator {
 
     private final Drawable drawable;
-    private int color;
     private HashSet<CalendarDay> dates;
 
-    public EventDecorator(int color, Collection<CalendarDay> dates, Activity context) {
-        drawable = context.getDrawable(R.drawable.more);
-        this.color = color;
+    public RemoveDecorator(Collection<CalendarDay> dates, Activity context) {
+        drawable = context.getDrawable(R.drawable.more_remove);
         this.dates = new HashSet<>(dates);
     }
 
@@ -37,6 +32,5 @@ public class EventDecorator implements DayViewDecorator {
     @Override
     public void decorate(DayViewFacade view) {
         view.setSelectionDrawable(drawable);
-        // view.addSpan(new DotSpan(5, color)); // 날자밑에 점
     }
 }

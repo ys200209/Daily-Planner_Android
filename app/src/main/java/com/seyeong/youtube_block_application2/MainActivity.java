@@ -6,11 +6,13 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.AlertDialog;
+import android.app.AppOpsManager;
 import android.app.Dialog;
 import android.app.TimePickerDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Color;
 import android.os.AsyncTask;
@@ -33,14 +35,17 @@ import com.prolificinteractive.materialcalendarview.MaterialCalendarView;
 import com.prolificinteractive.materialcalendarview.OnDateSelectedListener;
 import com.seyeong.youtube_block_application2.db.DbOpenHelper;
 import com.seyeong.youtube_block_application2.decorators.*;
+import com.seyeong.youtube_block_application2.domain.MyCalendar;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.List;
+import java.util.TimeZone;
 import java.util.concurrent.Executors;
 
 public class MainActivity extends AppCompatActivity {
@@ -49,22 +54,26 @@ public class MainActivity extends AppCompatActivity {
     String time,kcal,menu;
     private final OneDayDecorator oneDayDecorator = new OneDayDecorator();
     Cursor cursor;
-    MaterialCalendarView materialCalendarView;
+    static MaterialCalendarView materialCalendarView;
+    CalendarDay calendarDay;
+    static List<String> result = new ArrayList<>(); // 데코레이션이 참조되는 날짜 객체들의 day_key 값들 (접근을 용이하게 하려고 만듦)
+    static ArrayList<CalendarDay> dates = new ArrayList<>(); // 실제 데코레이션이 참조되는 날짜 객체들
+    static MainActivity mainActivity = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_calendar);
 
-        /* if (!checkAccessibilityPermissions()) { // 만약 접근성 권한이 허가되지 않은 상태라면
+        /*if (!checkAccessibilityPermissions()) { // 만약 접근성 권한이 허가되지 않은 상태라면
             requestAccessibilty();
-        } */
+        }*/
 
-        mDbOpenHelper.openW();
-        mDbOpenHelper.create();
-        mDbOpenHelper.close();
+        if(!checkPermission())
+            startActivity(new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS));
 
         materialCalendarView = (MaterialCalendarView)findViewById(R.id.calendarView);
+        mainActivity = MainActivity.this;
 
         materialCalendarView.state().edit()
                 .setFirstDayOfWeek(Calendar.SUNDAY)
@@ -73,13 +82,23 @@ public class MainActivity extends AppCompatActivity {
                 .setCalendarDisplayMode(CalendarMode.MONTHS)
                 .commit();
 
+        Log.d("태그", "now : " + materialCalendarView.getCurrentDate().getYear());
+        Log.d("태그", "now : " + (materialCalendarView.getCurrentDate().getMonth()+1));
+
         materialCalendarView.addDecorators(
                 new SundayDecorator(),
                 new SaturdayDecorator(),
                 oneDayDecorator);
 
         // 일정이 존재하는 날짜에 DB에서 조회.
-        List<String> result = Arrays.asList("2022,06,10", "2022,06,29");
+        mDbOpenHelper.openW();
+        mDbOpenHelper.create();
+        result = mDbOpenHelper.showCalendar(new MyCalendar(
+                materialCalendarView.getCurrentDate().getYear(),
+                materialCalendarView.getCurrentDate().getMonth(),
+                1
+        ));
+        mDbOpenHelper.close();
 
         new ApiSimulator(result).executeOnExecutor(Executors.newSingleThreadExecutor());
 
@@ -89,6 +108,8 @@ public class MainActivity extends AppCompatActivity {
                 int Year = date.getYear();
                 int Month = date.getMonth() + 1;
                 int Day = date.getDay();
+
+
 
                 Log.i("Year test", Year + "");
                 Log.i("Month test", Month + "");
@@ -100,54 +121,56 @@ public class MainActivity extends AppCompatActivity {
 
                 materialCalendarView.clearSelection();
 
-                /*Intent i = new Intent(MainActivity.this, DailyActivity.class);
-                i.putExtra("year", Year);
-                i.putExtra("month", Month);
-                i.putExtra("day", Day);
-                startActivity(i);*/
+                Intent i = new Intent(MainActivity.this, DailyActivity.class);
+                i.putExtra("Year", Year);
+                i.putExtra("Month", Month);
+                i.putExtra("Day", Day);
+                startActivity(i);
+
 
                 // startShell();
 
             }
         });
 
-        serviceStart();
+        // serviceStart();
         // isAppRunning(MainActivity.this, "com.google.android.youtube");
 
     }
 
-    private class ApiSimulator extends AsyncTask<Void, Void, List<CalendarDay>> {
+    public class ApiSimulator extends AsyncTask<Void, Void, List<CalendarDay>> {
 
         List<String> Time_Result;
 
-        ApiSimulator(List<String> Time_Result){
+        public ApiSimulator(List<String> Time_Result){
             this.Time_Result = Time_Result;
         }
 
         @Override
         protected List<CalendarDay> doInBackground(@NonNull Void... voids) {
             try {
-                Thread.sleep(500);
+                Thread.sleep(200);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
 
             Calendar calendar = Calendar.getInstance();
             CalendarDay day = null;
-            ArrayList<CalendarDay> dates = new ArrayList<>();
+            dates.clear();
 
             /*특정날짜 달력에 점표시해주는곳*/
             /*월은 0이 1월 년,일은 그대로*/
             //string 문자열인 Time_Result 을 받아와서 ,를 기준으로짜르고 string을 int 로 변환
             for(int i = 0 ; i < Time_Result.size() ; i ++){
 
-                String[] time = Time_Result.get(i).split(",");
-                int year = Integer.parseInt(time[0]);
-                int month = Integer.parseInt(time[1]);
-                int dayy = Integer.parseInt(time[2]);
+                // String[] time = Time_Result.get(i).split(",");
+                int year = Integer.parseInt(Time_Result.get(i).substring(0, 4));
+                int month = Integer.parseInt(Time_Result.get(i).substring(4, 6));
+                int dayy = Integer.parseInt(Time_Result.get(i).substring(6, 8));
 
                 calendar.set(year,month-1, dayy);
                 day = CalendarDay.from(calendar);
+
                 dates.add(day);
             }
 
@@ -228,25 +251,53 @@ public class MainActivity extends AppCompatActivity {
                 .show();
     }
 
-    /*public void startShell() {
-        Log.d("태그", "startShell");
-        try {
-            // Process process = Runtime.getRuntime().exec("pidof com.google.android.youtube");
-            // Process process = Runtime.getRuntime().exec("pm list packages -f".split(" "));
-            Process process = Runtime.getRuntime().exec("ps -ef");
-            process.waitFor();
+    private boolean checkPermission(){
 
-            BufferedReader stdInput = new BufferedReader(new
-                    InputStreamReader(process.getInputStream()));
+        boolean granted = false;
 
-            String s = null;
-            while ((s = stdInput.readLine()) != null) {
-                Log.d("태그", s);
-            }
+        AppOpsManager appOps = (AppOpsManager) getApplicationContext()
+                .getSystemService(Context.APP_OPS_SERVICE);
 
-        } catch (IOException | InterruptedException e) {
-            e.printStackTrace();
+        int mode = appOps.checkOpNoThrow(AppOpsManager.OPSTR_GET_USAGE_STATS,
+                android.os.Process.myUid(), getApplicationContext().getPackageName());
+
+        if (mode == AppOpsManager.MODE_DEFAULT) {
+            granted = (getApplicationContext().checkCallingOrSelfPermission(
+                    android.Manifest.permission.PACKAGE_USAGE_STATS) == PackageManager.PERMISSION_GRANTED);
         }
+        else {
+            granted = (mode == AppOpsManager.MODE_ALLOWED);
+        }
+
+        return granted;
+    }
+
+    /*public void updateDecorate() {
+
     }*/
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        Log.d("태그", "(onPause) : finish()");
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        new ApiSimulator(result).executeOnExecutor(Executors.newSingleThreadExecutor());
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        Log.d("태그", "(onStop)");
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        Log.d("태그", "(onDestroy)");
+    }
 
 }

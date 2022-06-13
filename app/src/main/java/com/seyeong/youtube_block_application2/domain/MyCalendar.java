@@ -1,10 +1,10 @@
 package com.seyeong.youtube_block_application2.domain;
 
-public class Calender {
+public class MyCalendar {
 
     private int YEAR, MONTH, DAY;
 
-    public Calender(int YEAR, int MONTH, int DAY) {
+    public MyCalendar(int YEAR, int MONTH, int DAY) {
         this.YEAR = YEAR;
         this.MONTH = MONTH;
         this.DAY = DAY;
@@ -24,7 +24,7 @@ public class Calender {
 
     @Override
     public boolean equals(Object obj) {
-        Calender aCalender = (Calender)obj;
+        MyCalendar aCalender = (MyCalendar)obj;
 
         if (this.YEAR == aCalender.getYear() &&
         this.MONTH == aCalender.getMonth() &&
